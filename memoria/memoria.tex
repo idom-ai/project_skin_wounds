@@ -377,19 +377,81 @@ tendremos en cuenta (en azul), tan solo el accuracy que tengan aquellos grupos c
 
 \begin{enumerate}
     \item El accuracy relativo a los fototipos conocidos y con representación razonable no está demasiado desbalanceado. 
-    El hecho de que acierte siempre las lesiones de personas de fototipos V-VI no se comentará, pues tan solo se tiene una 
-    muestra de cada uno. 
+    El hecho de que acierte siempre las lesiones de personas de fototipos V-VI se comentará más abajo. 
 
     \item Sí que parece que el modelo tiene mayor facilidad de acertar las lesiones de piel de personas jóvenes ($\leq 40$) que las 
-    de mayor edad. Esto se puede justificar argumentando que las arrugas dificultan el hecho de predecir lesiones de piel, como es natural.
+    de mayor edad. Esto se puede justificar argumentando que las arrugas dificultan el hecho de predecir lesiones de piel, pues podemos 
+    entender las arrugas como ruido como tal. Sin embargo, visto desde otra óptica, puede ser que las clases de lesiones de piel sean más
+    fáciles de predecir para rangos de edad más jóvenes. El hecho de que el tipo de lesión sea distinto según el grupo de la edad es una 
+    explicación sencilla, bajo el supuesto de que el rango de edad puede determinar el tipo de lesión de piel que se tenga, especialmente 
+    con lesiones como el melanoma. Se comprueba un poco más abajo. 
 
     \item El modelo predice también igual de bien independientemente del sexo. 
 \end{enumerate}
 
-\noindent En conclusión: a vista de estos resultados, no constatar resultados, pero sí obtener algunas conclusiones que 
+\noindent \textbf{Acerca de los tipos de lesión según el fenotipo de piel:}
+
+\medskip
+
+\noindent El hecho de que que predigan tan bien las muestras de los fotitipos V y VI podría no parecer relevante dado que hay tan pocas muestras. 
+Aún así, se propone investigar cuales son las clases en train de esos fototipos para averiguar si las predicciones son invariantes al fototipo. 
+Encontramos lo siguiente:
+
+\begin{center}
+    \includegraphics[width=\linewidth]{images/revision_fototipos56_train.png}
+\end{center}
+
+\noindent En validación y test, son:
+
+\begin{center}
+    \includegraphics[width=\linewidth]{images/revision_fototipos56_val_test.png}
+\end{center}
+
+\noindent Si bien esto es difícil de interpretar, lo que sí que sabemos es que el modelo, sin ver nunca en train una imagen de un 
+fototipo VI, es capaz de acertarlo en test. Algo parecido pasa cpn el fototipo V, que si bien sí que ve en el conjunto de train, 
+creemos que no lo suficiente como para aprender a distinguirlo. No hay evidencia suficiente como para afirmar que el modelo generalice
+bien sin importar el fototipo, pero con los datos que tenemos, desde luego, es todo lo que podemos decir. 
+
+\medskip
+
+\noindent No estaría de más, más adelante, tener cuidado con las partes de la imagen en las que se fija el modelo cuando se trata de 
+estos fenotipos via algoritmos como Grad-CAM. Es posible que, de cara a hacer las predicciones, se base antes en el tipo de piel que 
+en la lesión en sí, lo que querría decir que el modelo no aprende lo que se pretente. Aunque esto no cuadra demasiado con los resultados, 
+puesto que en train ve más de una sola lesión para el fenotipo V (y las clases predichas ni si quiera cuadran con las clases que ve en train) 
+y ninguna para el VI, lo revisaremos más adelante. 
+
+\medskip
+
+\noindent \textbf{Acerca de las lesiones según los rangos de edad:}
+
+\medskip
+
+\noindent Parece evidente el hecho de que habrá según qué rangos de edad predispuestos a según qué lesiones algo que puede
+explicar que el modelo prediga mejor las lesiones para grupos de edad más jóvenes. Podemos comprobarlo:
+
+\begin{center}
+    \includegraphics[width=\linewidth]{images/revision_lesiones_por_edad.png}
+\end{center}
+
+\noindent Como era de esperar, la distribución de lesiones según el rango de edad varía bastante. No hay mucho que hacer en esta sección, 
+más que constatarlo para tenerlo en cuenta más adelante. Sin embargo, el hecho de que cambie la distribución no tiene por qué significar 
+que el modelo las aprenda peor. En concreto, los accuracy por clase y rango de edad son los siguientes:
+
+\begin{center}
+    \includegraphics[width=\linewidth]{images/revision_accuracy_clase_edad.png}
+\end{center}
+
+\noindent En conclusión: a vista de estos resultados podemos, si bien no constatarlas, sí obtener algunas conclusiones que 
 pudieran ser intuitivas. No hay datos suficientes para afirmar que los modelos predicen mejor para según que fototipos de 
-piel. La evidencia que tenemos es que, sin embargo, sí que parecen predecir mejor en función del rango de edad. Y por último, 
-también parece que las predicciones no mejoran ni empeoran en función del sexo. 
+piel. La evidencia que tenemos es que, sin embargo, sí que parecen predecir mejor en función del rango de edad, pero esto
+no se debe, o al menos no hay evidencia para creerlo, a que las imágenes sean más o menos sencillas, sino a que la distribución de 
+lesiones por rango de edad varía. Y por último, también parece que las predicciones no mejoran ni empeoran en función del sexo, pues 
+el dataset no presenta sesgo en este sentido. 
+
+\medskip
+
+\noindent Es probable que, una de las formas de tratar estos problemas más adelante, sea construir batches balanceados que permitan 
+al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Queda pendiente para secciones siguientes.
 
 \subsection{Otras cuestiones relevantes}
 
