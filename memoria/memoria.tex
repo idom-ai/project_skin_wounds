@@ -50,6 +50,7 @@
 
 
 \section{Introducción}
+\label{sec:introduccion}
 
 \noindent Este proyecto aborda la clasificación de lesiones de piel a partir de una imagen: dado un caso, el modelo debe decir
 a qué diagnóstico corresponde (nevus, melanoma, carcinoma basocelular, queratosis, etc.). La motivación es un escenario
@@ -111,6 +112,7 @@ desarrollarse una tal aplicación, en colaboración con algún mecanismo de aten
 \noindent En esta sección se encuentra todo aquello referente a la línea base.
 
 \subsection{Adaptación de nuestros datos al baseline}
+\label{subsec:adaptacion}
 
 \noindent Lo más importante a comentar acerca de nuestro dataset:
 
@@ -134,6 +136,7 @@ desarrollarse una tal aplicación, en colaboración con algún mecanismo de aten
         de origen como para el de destino, pues será necesario más adelante. En concreto: 
 
         \begin{center}
+            \captionsetup{type=table}
             \small
             \renewcommand{\arraystretch}{1.3}
             \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
@@ -148,6 +151,8 @@ desarrollarse una tal aplicación, en colaboración con algún mecanismo de aten
                             & Medir cómo funciona en el dominio nuevo. \\
                 \bottomrule
             \end{tabularx}
+            \caption{Uso de cada partición en el origen y en el destino.}
+            \label{tab:particiones}
         \end{center}
     \end{enumerate} 
 
@@ -175,7 +180,8 @@ desarrollarse una tal aplicación, en colaboración con algún mecanismo de aten
 
 \noindent Todo lo enumerado se recoge finalmente en la tabla común, como se ve a continuación:
 
-\begin{center}
+\begin{table}[H]
+    \centering
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{@{}llrrrrrrrr@{}}
@@ -197,9 +203,12 @@ desarrollarse una tal aplicación, en colaboración con algún mecanismo de aten
         \multicolumn{2}{@{}l}{\textbf{Total}} & 1249 & 1359 & 1334 & 115 & 1165 & 6949 & 142 & \textbf{12313} \\
         \bottomrule
     \end{tabular}
-\end{center}
+    \caption{Número de imágenes por dominio, partición y clase en la tabla común.}
+    \label{tab:recuentos}
+\end{table}
 
 \subsection{Exploración en los datos}
+\label{subsec:exploracion}
 
 \noindent Una vez descargados, divididos en clases y conjuntos, en esta subsección se procederá con una exploración 
 breve de los datos.
@@ -208,9 +217,12 @@ breve de los datos.
 
 \noindent \textbf{Desbalance de clase:}
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/exploracion_1.png}
-\end{center}
+    \caption{Distribución de clases en el conjunto de entrenamiento de cada dominio.}
+    \label{fig:exploracion-clases}
+\end{figure}
 
 \noindent El desbalance de clases es más que evidente en train, tanto en el conjunto de origen como en el de destino. 
 Esto, naturalmente, supondrá un problema a la hora de clasificar. Pero la idea es no tratarlo en el baseline, sino
@@ -237,9 +249,12 @@ raciales, por lo que necesariamente tendrá que ser una parte importante en secc
 para el 35\% de las muestras. Además de la escala, también trae edad y sexo por paciente. Esto podrían también ser sesgos 
 importantes a tener en cuenta. Una representación de los datos según estas categorías sería: 
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/exploracion_2.png}
-\end{center}
+    \caption{Fototipo, edad y sexo de las imágenes del dominio móvil.}
+    \label{fig:exploracion-metadatos}
+\end{figure}
 
 \noindent Algunas conclusiones:
 
@@ -259,11 +274,15 @@ especial atención en los minoritarios.
 
 \noindent \textbf{Algunos ejemplos de cada clase en ambos dominios:}
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/exploracion_3.png}
-\end{center}
+    \caption{Ejemplos de cada clase en los dos dominios.}
+    \label{fig:ejemplos}
+\end{figure}
 
 \subsection{Extracción de features}
+\label{subsec:extraccion}
 
 \noindent La extracción de las features fue realizada de acuerdo con los
 modelos propuestos en la plantilla de la línea base. En concreto, estos son ResNet50, 
@@ -273,13 +292,15 @@ Si fuera elevado, es probable que algún modelo ligero de la familia de MobileNe
 un balance adecuado entre precisión y velocidad en inferencia. Queda pendiente para el futuro. 
 
 \subsection{Clasificador lineal}
+\label{subsec:clasificador}
 
 \noindent Se entrena una capa lineal sobre cada una de las features obtenidas. Se obtienen,
 para cada clasificador, en cada dominio y para cada partición (validación y test) el accuracy, el balanced 
 accuracy y el Macro-F1. La tabla siguiente es orientativa de los resultados y es la referencia a batir
 en U3 y U4:
 
-\begin{center}
+\begin{table}[H]
+    \centering
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{@{}llrrrrrr@{}}
@@ -298,7 +319,9 @@ en U3 y U4:
                       & test & \textbf{0.771} & 0.643 & 0.613 & 0.172 & 0.264 & 0.169 \\
         \bottomrule
     \end{tabular}
-\end{center}
+    \caption{Métricas del clasificador lineal sobre cada extractor, por dominio y partición.}
+    \label{tab:metricas-modelos}
+\end{table}
 
 \noindent El Macro-F1 es la métrica que tiene en cuenta, no solo lo que el modelo
 no es capaz de acertar (por ejemplo, la balanced accuracy tiene en cuenta $\frac{TP}{\text{\# objetos}}$), 
@@ -306,7 +329,8 @@ sino que también penaliza cuando falla, pues cuenta los falsos positivos. Por e
 puede tener en cuenta el hecho de que el modelo ataque al desbalance de clase, de ahí que sea nuestra métrica a tener en
 cuenta a priori para comparar modelos y dominios. En concreto, obtenemos:
 
-\begin{center}
+\begin{table}[H]
+    \centering
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{@{}lrrr@{}}
@@ -318,7 +342,9 @@ cuenta a priori para comparar modelos y dominios. En concreto, obtenemos:
         CLIP ViT-B/32   & 0.613 & 0.169 & 0.444 \\
         \bottomrule
     \end{tabular}
-\end{center}
+    \caption{Macro-F1 en test por dominio y caída al pasar del dermatoscopio al móvil.}
+    \label{tab:caida-dominio}
+\end{table}
 
 \noindent Podemos notar que el mejor modelo según esta métrica, es DINOv2. No es especialmente 
 relevante, pues se está midiendo sobre train. Lo más relevante es que la caída de 
@@ -327,13 +353,15 @@ secciones. Por otra, bastante más alta de la que esperábamos, pensando en que 
 menos eso indican sus categorías. 
 
 \subsection{Evaluación}
+\label{subsec:evaluacion}
 
 \noindent La selección del modelo se haría con el conjunto de validación en origen, pues la 
 idea es seleccionar el mejor modelo, de nuevo, de forma ciega con respecto a su 
 comportamiento en origen. Midiedo las métricas en validación, en el dominio del dermatoscopio, obtenemos
 la siguiente tabla: 
 
-\begin{center}
+\begin{table}[H]
+    \centering
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{@{}lrrr@{}}
@@ -345,15 +373,20 @@ la siguiente tabla:
         ResNet-50              & 0.722 & 0.577 & 0.519 \\
         \bottomrule
     \end{tabular}
-\end{center}
+    \caption{Métricas en la validación del dermatoscopio, usadas para elegir el modelo.}
+    \label{tab:seleccion-modelo}
+\end{table}
 
 \noindent En concreto, en nuestro caso, la selección del mejor modelo en validación es sencilla, pues el que parte de CLIP
 parece ser bastante superior en todas las métricas que hemos medido. Concretamente, para este modelo, las métricas más 
 relevantes acerca de su rendimiento de test, en ambos dominios, son las que siguen:
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/evaluacion_1.png}
-\end{center}
+    \caption{F1 por clase y matrices de confusión en test del modelo elegido (CLIP).}
+    \label{fig:evaluacion-clases}
+\end{figure}
 
 \begin{enumerate}
     \item Su F1 en el dermatoscopio es alto incluso en algunas clases infrarepresentadas, como vasc, que representa menos 
@@ -369,9 +402,12 @@ relevantes acerca de su rendimiento de test, en ambos dominios, son las que sigu
 \noindent Podemos añadir un análisis de equidad con respecto a los resultados de test en el dominio del móvil. Para ello, 
 tendremos en cuenta (en azul), tan solo el accuracy que tengan aquellos grupos con más de 30 imágenes:
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/evaluacion_2.png}
-\end{center}
+    \caption{Accuracy por fototipo, edad y sexo en el test del móvil. En gris, grupos con menos de 30 imágenes.}
+    \label{fig:equidad}
+\end{figure}
 
 \noindent Algunos comentarios acerca de estos resultados:
 
@@ -397,15 +433,21 @@ tendremos en cuenta (en azul), tan solo el accuracy que tengan aquellos grupos c
 Aún así, se propone investigar cuales son las clases en train de esos fototipos para averiguar si las predicciones son invariantes al fototipo. 
 Encontramos lo siguiente:
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/revision_fototipos56_train.png}
-\end{center}
+    \caption{Clases de las imágenes de fototipos V y VI en entrenamiento (móvil).}
+    \label{fig:fototipos56-train}
+\end{figure}
 
 \noindent En validación y test, son:
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/revision_fototipos56_val_test.png}
-\end{center}
+    \caption{Clases de las imágenes de fototipos V y VI en validación y test (móvil).}
+    \label{fig:fototipos56-val-test}
+\end{figure}
 
 \noindent Si bien esto es difícil de interpretar, lo que sí que sabemos es que el modelo, sin ver nunca en train una imagen de un 
 fototipo VI, es capaz de acertarlo en test. Algo parecido pasa cpn el fototipo V, que si bien sí que ve en el conjunto de train, 
@@ -429,20 +471,26 @@ y ninguna para el VI, lo revisaremos más adelante.
 \noindent Parece evidente el hecho de que habrá según qué rangos de edad predispuestos a según qué lesiones algo que puede
 explicar que el modelo prediga mejor las lesiones para grupos de edad más jóvenes. Podemos comprobarlo:
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/revision_lesiones_por_edad.png}
-\end{center}
+    \caption{Tipos de lesión por rango de edad en el dominio móvil.}
+    \label{fig:lesiones-edad}
+\end{figure}
 
 \noindent Como era de esperar, la distribución de lesiones según el rango de edad varía bastante. No hay mucho que hacer en esta sección, 
 más que constatarlo para tenerlo en cuenta más adelante. Sin embargo, el hecho de que cambie la distribución no tiene por qué significar 
 que el modelo las aprenda peor. En concreto, los accuracy por clase y rango de edad son los siguientes:
 
-\begin{center}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=\linewidth]{images/revision_accuracy_clase_edad.png}
-\end{center}
+    \caption{Accuracy por clase y rango de edad en el test del móvil.}
+    \label{fig:accuracy-clase-edad}
+\end{figure}
 
-\noindent En conclusión: a vista de estos resultados podemos, si bien no constatarlas, sí obtener algunas conclusiones que 
-pudieran ser intuitivas. No hay datos suficientes para afirmar que los modelos predicen mejor para según que fototipos de 
+\noindent En conclusión: a vista de estos resultados podemos, si bien no constatarlas, enfatizar algunas conclusiones que 
+nos resultan intuitivas. No hay datos suficientes para afirmar que los modelos predicen mejor para según que fototipos de 
 piel. La evidencia que tenemos es que, sin embargo, sí que parecen predecir mejor en función del rango de edad, pero esto
 no se debe, o al menos no hay evidencia para creerlo, a que las imágenes sean más o menos sencillas, sino a que la distribución de 
 lesiones por rango de edad varía. Y por último, también parece que las predicciones no mejoran ni empeoran en función del sexo, pues 
@@ -454,12 +502,14 @@ el dataset no presenta sesgo en este sentido.
 al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Queda pendiente para secciones siguientes.
 
 \subsection{Otras cuestiones relevantes}
+\label{subsec:otras}
 
 \begin{enumerate}
     \item \textbf{Cantidad de datos:} existen datos suficientes. A pesar del desbalance de clases, podemos afirmar esto, especialmente
     teniendo en cuenta que la idea del proyecto es tratar el desbalance, entrenar los modelos con pocos
     datos. Algunos ejemplos de clases, dentro de dominios, infrarrepresentadas, a continuación:
     \begin{center}
+        \captionsetup{type=table}
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{@{}llrrrr@{}}
@@ -474,6 +524,8 @@ al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Q
                       & bkl (queratosis benigna) & 141 & 47 & 47 & 10.2\,\% \\
         \bottomrule
     \end{tabular}
+        \caption{Ejemplos de clases infrarrepresentadas en cada dominio.}
+        \label{tab:clases-infrarrepresentadas}
 \end{center}
 
     \item \textbf{Modelo de mejor rendimiento}
@@ -488,6 +540,7 @@ al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Q
     \item \textbf{Las clases de peor rendimiento:} no necesariamente son las de menor representación. Como vimos antes, vasc tiene un F1 alto en el dermatoscopio. 
     Un análisis breve acerca de las clases de peor rendimiento: 
     \begin{center}
+        \captionsetup{type=table}
     \small
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{@{}lrrrl@{}}
@@ -499,6 +552,8 @@ al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Q
         mel (melanoma)          & 779 & 0.50 & 0.53 & nv (0.24), bkl (0.14) \\
         \bottomrule
     \end{tabular}
+        \caption{Clases con peor F1 en el test del dermatoscopio y sus principales confusiones.}
+        \label{tab:peor-f1-origen}
     \end{center}
     \item \textbf{Diferentes dominios:} hay diferentes dominios, claramente, y se diferencian en dos cosas a la vez. 
     \begin{enumerate}
@@ -510,7 +565,10 @@ al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Q
     \end{enumerate}
 
     \begin{center}
+        \captionsetup{type=figure}
         \includegraphics[width=\linewidth]{images/dominios_proporciones.png}
+        \caption{Proporción de cada clase en el train del dermatoscopio y en el test del móvil.}
+        \label{fig:proporciones-dominio}
     \end{center}
 
     \item \textbf{Sensibilidad:} se trata de un tema sensible, por varios motivos:
@@ -528,4 +586,269 @@ al modelo ver, en cada época, lotes de imágenes coherentemente distribuidas. Q
         modelo funciona igual para ellas. Usarlo en una población más diversa sin validarlo antes sería un riesgo.
     \end{enumerate}
 \end{enumerate}
+
+\section{Limitaciones en los datos}
+\label{sec:limitaciones}
+
+\noindent Como hemos podido apreciar en el análisis de la línea base, es evidente que los datos tienen limitaciones. A continuación, 
+presentamos una enumeración de los problemas más preocupantes que hemos podido identificar, con su descripción y metodologías que 
+emplearemos para solucionarlo. La idea es que, con esto, quede claro qué técnicas se presentarán, y para qué. 
+
+\begin{enumerate}
+    \item \textbf{Desbalance de clases:} hay dos clases que representan menos del 1\% de las imágenes de train del dermatoscopio. 
+    Son vasc y df, precisamente las clases sin representación en destino. Sin embargo, seguimos sin poder fijarnos en el destino 
+    para resolver el problema; el objetivo de esta sección es ser capaces de que el modelo aprenda a pesar del desbalance de clases.
+    Además, nuestra intuición es que, de aprender idealmente las clases sin representación en destino en origen, nunca debería predecirlas. 
+    Si lo hiciera, indicaría baja calidad del aprendizaje en esta etapa. Lo que esperamos, sin embargo, es que aunque tratarlas en train en 
+    origen pueda mostrar resultados positivos en este dominio, no necesariamente lo hará en destino, mostrando, tal vez, empobrecimiento. 
+    Técnicas que usaremos para tratar de enmendarlo:
+    \begin{enumerate}
+        \item \textbf{Compensar con la función de pérdida:} debería subir el recall y la macro-F1 a costa de algo de accuracy sobre las clases
+        sobrerrepresentadas, como nv. 
+        \begin{enumerate}
+            \item \textbf{Cross-entropy ponderada:} con ella, es posible que perdamos algo de accuracy en clases sobrerrepresentadas como nv, 
+            a cambio de un mayor accuracy en otras de menor representación. 
+            \item \textbf{Focal-loss:} la idea de la focal loss es la misma que la de la anterior. Creemos que puede ser enriquecedor probar ambas
+            y seleccionar la de mejor rendimiento. 
+            \item \textbf{Ajuste de logits:} es una forma elegante de restar frecuencia a las clases sobrerrepresentadas. 
+            Puede ayudar más, por el hecho de que las proporciones cambian al cambiar de dominio. 
+        \end{enumerate}
+        \item \textbf{Compensar con los datos:} el efecto es parecido, pero puede servir como complemento para mejorar todo lo anterior. 
+            \begin{enumerate}
+                \item \textbf{Batches balanceados:} en cada batch se trata de incluir proporciones más razonables de imágenes de cada clase. 
+                \item \textbf{Mezcla de imágenes:} dos imágenes $\textbf{x}_1$ y $\textbf{x}_2$ con etiquetas $y_1$ e $y_2$ se mezclan, de acuerdo 
+                con un parámetro $\lambda \in [0,1]$ razonable, de la forma $\textbf{x} = \lambda \textbf{x}_1 + (1-\lambda)\textbf{x}_2$; 
+                $y = \lambda y_1 + (1-\lambda)y_2$. Esto puede generar imágenes con poco sentido semántico, pero aumenta la cantidad de datos. 
+            \end{enumerate}
+            \textbf{Nota:} ambos métodos son complementarios también. El segundo, no funcionaría sin el primero. Y el efecto del primero, no sería
+            tan positivo sin el segundo. 
+    \end{enumerate}
+
+    \item \textbf{Pocos ejemplos de algunas clases:} en destino encontramos tan solo 31 melanomas en train y 10 en test. Este problema es 
+    distinto al del desbalance, pues tiene que ver con la inexistencia de según qué clases, más que con la infrarrepresentación. Sucede lo
+    mismo con df (80 train, 23 test) o vasc (99 train, 29 test) en origen.
+
+    \begin{enumerate}
+        \item \textbf{Curva de 1 a 20 melanomas:} en cada iteración, se entrena un clasificador lineal con todas las imágenes del resto de clases,
+        salvo las de los melanomas. De ésta clase se eligen $k$ al azar en train, con $k\in \{1, 2, 5, 10, 20\}$ y se mide F1 de mel en test del origen. 
+        La idea es repetir el experimento para cada $k$ varias veces y así representar la media y dispersión de las mediciones. 
+    \end{enumerate}
+
+    \item \textbf{Clases que se confunden:} observando la matriz de confusión de la Figura \ref{fig:evaluacion-clases}, es claro que algo está 
+    yendo mal. En train, el 24\% de los melanomas se están prediciendo como nv y, en test, ningún melanoma se predice correctamente. Esto puede 
+    ser un problema que no solo se daba a los datos, pues existe un evidente desbalance (hay casi 6 veces más nv que mel), pero a nuestro parecer
+    tiene imágenes suficientes. 
+
+    \begin{enumerate}
+        \item \textbf{Comprobar representaciones:} como decimos, es probable que el problema no esté únicamente en los datos. De ser un problema 
+        de representación, es posible que otros descriptores permitan obtener features más fáciles de separar linealmente. Por tanto, la idea 
+        es comparar el modelo elegido con otros y fijarnos en cómo separan las clases. 
+        \item \textbf{CLIP zero-shot:} la idea aquí sería diseñar un prompt para cada clase, de la forma "a dermoscopy image of a <clase>". 
+        Con esto, si CLIP se entrenó con pares texto-imagen del tópico de dermatología, ayuda a focalizar la atención y mejorar la separación 
+        de clases en la extracción de features. 
+
+    \end{enumerate}
+
+\end{enumerate}
+
+\noindent Con esto, y de forma más intuitiva, se emplearán los siguientes métodos:
+
+\begin{enumerate}
+    \item Clases desbalanceadas. 
+    \begin{enumerate}
+        \item Cross-entropy ponderada (ataca a la función de pérdida). 
+        \item Focal-loss (ataca a la función de pérdida). 
+        \item Ajuste de logits (ataca a la función de pérdida). 
+        \item Batches balanceados (ataca a los datos). 
+        \item Mezcla de imágenes (ataca a los datos). 
+    \end{enumerate}
+    \item Pocos ejemplos en algunas clases. 
+    \begin{enumerate}
+        \item Curva de 1 a 20 melanomas. 
+    \end{enumerate}
+    \item Confusiones entre clases
+    \begin{enumerate}
+        \item Comprobación de representaciones vía t-SNE. 
+        \item CLIP zero-shot. 
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Cross-entropy ponderada y Focal-loss}
+\label{subsec:cross}
+
+\noindent Ambas formas de atacar el problema podrían ser válidas, y probablemente tengan efectos muy parecidos. 
+La idea es probar ambas y seleccionar la que mejores resutados brinde, porque, a priori, no podemos intuir cual de las 
+dos funcionará mejor. 
+
+\subsubsection{Cross-entropy ponderada}
+
+\noindent Resumidamente, se pondera cada error por un peso inversamente proporcional a la frecuencia de su clase:
+
+$$ w_c = \frac{N}{7 \times N_c}, \ c \in \{1, 2, \cdots, 7\}$$
+
+\noindent Y entonces: 
+
+$$CE(p_t) = -\text{log}(p_t) \to CE_{\text{ponderada}} = -w_t \text{log}(p_t)$$
+
+\noindent Con eso, equivocarse en un df es 60 veces más costoso que equivocarse con un nv. Los resultados tras 
+reentrenar el clasificador lineal con esta nueva función de pérdida son (comparados con los resultados de la línea base):
+
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{@{}lrrrrrrr@{}}
+        \toprule
+        & \multicolumn{2}{c}{\textbf{Macro-F1}} & \multicolumn{2}{c}{\textbf{Bal. acc.}} & \multicolumn{2}{c}{\textbf{Accuracy}} & \textbf{mel$\to$nv} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(l){8-8}
+        \textbf{Técnica} & Derm. & Móvil & Derm. & Móvil & Derm. & Móvil & Derm. \\
+        \midrule
+        Baseline     & \textbf{0.624} & 0.165 & 0.654 & 0.267 & \textbf{0.775} & 0.168 & 0.242 \\
+        CE ponderada & 0.531 & \textbf{0.226} & \textbf{0.711} & \textbf{0.288} & 0.656 & \textbf{0.200} & \textbf{0.067} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Baseline frente a cross-entropy ponderada, en test. Derm.: dermatoscopio; mel$\to$nv: proporción de melanomas predichos como nevus.}
+    \label{tab:u3-ce-ponderada}
+\end{table}
+
+\noindent Podemos apreciar que mejora sus 3 métricas para el destino (generaliza mejor) a cambio de perder accuracy y Macro-F1. Es 
+relevante ver indicado que confunde unas 4 veces menos mel con nv, algo muy positivo. Podemos apreciar también la siguiente figura:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_ce_ponderada.png}
+    \caption{F1 por clase en el baseline comparada con la $CE_{\text{ponderada}}$ en origen y destino. }
+    \label{fig:ce-ponderada}
+\end{figure}
+
+\noindent En general, pierde F1 en train en todas las clases, pero a cambio generaliza mejor en test en el dominio. Perder accuracy
+en train no suele ser un problema, pues es donde tenemos margen de mejora, siempre y cuando sea para mejorar en test, como es el caso. 
+
+\subsubsection{Focal-loss}
+
+\noindent La Focal-loss pondera la cross-entropy de cada ejemplo por el factor $(1-p)^\gamma$, con 
+$$p=\frac{N_c}{\sum_c N_c}, \ c=\{1, 2, \cdots, 7\}$$ la probabilidad de que el modelo prediga la clase 
+correcta (casos favorables, por clase, entre casos posibles). Ese factor es a su vez ponderado por un factor 
+$\alpha_c=\frac{N}{K\times N_c}$, precisamente el mismo que usamos en la cross-entropy. Queda de la forma: 
+
+$$ FL(p_t) = -\alpha_t (1-p_t)^\gamma \text{log}(p_t)$$
+
+\noindent De ahí que la cross-entropy ponderada anterior no sea más que un caso particular de la Focal-loss, pues con
+$\gamma=0$:
+
+$$ FL(p_t) = -\alpha_t log(p_t) = - \frac{N}{K\times N_t} \text{log}(p_t) = CE_{\text{ponderada}}(p_t)$$
+
+\noindent Aunque la cross-entropy ponderada no sea más que un caso particular de la Focal-loss, no tiene por qué funcionar mejor. 
+Por ejemplo, si elegimos el $\gamma$ según el Macro-F1 que brinde en validación: 
+
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{@{}lc@{}}
+        \toprule
+        \textbf{Técnica} & \textbf{Macro-F1 (val, dermatoscopio)} \\
+        \midrule
+        Focal, $\gamma = 0$          & $0.525 \pm 0.008$ \\
+        Focal, $\gamma = 0.5$        & $0.529 \pm 0.009$ \\
+        \textbf{Focal, $\boldsymbol{\gamma = 1}$} & $\mathbf{0.530 \pm 0.009}$ \\
+        Focal, $\gamma = 2$          & $0.529 \pm 0.008$ \\
+        Focal, $\gamma = 3$          & $0.522 \pm 0.009$ \\
+        \midrule
+        CE ponderada                 & $0.526 \pm 0.008$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Elección de $\gamma$ para la focal loss. Cada configuración se entrena con 5 semillas distintas sobre el
+    train del dermatoscopio y se evalúa en su validación; se muestra la media y la desviación típica de la macro-F1.}
+    \label{tab:u3-focal-gamma}
+\end{table}
+
+\noindent El mejor $\gamma$ es 1 en validación. Cabría esperar entonces que esta Focal-loss funcione mejor en test que la 
+cross-entropy: 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_focal_loss.png}
+    \caption{F1 por clase en el baseline comparada con la $CE_{\text{ponderada}}$ y la mejor Focal-loss en origen y destino. }
+    \label{fig:fl}
+\end{figure}
+
+\noindent Podemos comprobar que no es así, pues la $CE_{\text{ponderada}}$ parece ser superior a la Focal-loss para prácticamente todas las
+clases en test, tanto en destino como origen. Sin embargo, de acuerdo con la metodología estándar de buenas prácticas, deberíamos 
+seleccionar el mejor resultado en validación, es decir, la Focal-loss. Además, el resultado no es tan diferente, sigue siendo
+mejor que el baseline. 
+
+\medskip
+
+\noindent \textbf{Nota:} sigue siendo muy complicado que el modelo prediga correctamente la clase akiec en destino. Pasa a ser preocpuante, 
+pues parece que no es culpa de los modelos. Nosotros lo achacamos al cambio de dominio. 
+
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{@{}lrrrrrrr@{}}
+        \toprule
+        & \multicolumn{2}{c}{\textbf{Macro-F1}} & \multicolumn{2}{c}{\textbf{Bal. acc.}} & \multicolumn{2}{c}{\textbf{Accuracy}} & \textbf{mel$\to$nv} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(l){8-8}
+        \textbf{Técnica} & Derm. & Móvil & Derm. & Móvil & Derm. & Móvil & Derm. \\
+        \midrule
+        Baseline     & \textbf{0.624} & 0.165 & 0.654 & 0.267 & \textbf{0.775} & 0.168 & 0.242 \\
+        CE ponderada & 0.531 & \textbf{0.226} & \textbf{0.711} & \textbf{0.288} & 0.656 & \textbf{0.200} & \textbf{0.067} \\
+        Focal loss   & 0.535 & 0.210 & 0.702 & 0.280 & 0.660 & 0.185 & 0.076 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Baseline, cross-entropy ponderada y focal loss ($\gamma = 1$), en test. Derm.: dermatoscopio; mel$\to$nv: proporción de melanomas predichos como nevus.}
+    \label{tab:u3-focal}
+\end{table}
+
+\noindent Comprobamos que, de hecho, la Focal-loss no mejora, en test, ninguna métrica a la $CE_{\text{ponderada}}$. Pero estos resultados
+
+\subsection{Ajuste de logits}
+\label{subsec:logits}
+
+\noindent Sea la puntuación del modelo antes de la capa Softmax del clasificador lineal $\textbf{z} \in \mathbb{R}^{|c|}$. 
+La idea del ajuste de logits es restar al logit asociado a cada clase $c$, $\textbf{z}_c$, el logaritmo de la frecuencia de cada clase
+$$\text{log}(\tau_c), \tau_c = \frac{N_c}{N}$$ ponderado por un factor de intensidad $\tau \in \mathbb{R}$:
+$$\hat{\textbf{z}}_c=\textbf{z}_c - \tau \text{log}(\tau_c)$$
+
+\noindent El resultado de esto: penalizar a las clases más probables.
+
+\medskip
+
+\noindent \textbf{Hipótesis:} el sesgo hacia nv viene de su frecuencia, no de 
+que las features lo separen mejor. Si es así, este ajuste debería dar un resultado parecido a la CE ponderada sin reentrenar. 
+Como solo cambia la frontera de decisión, si no mejora, el problema está en la representación y no en el desbalanceo per sé.
+Para comprobarlo, deberíamos:
+
+\begin{enumerate}
+    \item Seleccionar un $\tau$ óptimo según validación. 
+    \item Realizar el ajuste de logits para tal $\tau$. 
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/u3_ajuste_logits_tau.png}
+    \caption{Elección del parámetro $\tau$ de acuerdo con el Macro-F1 en validación.}
+    \label{fig:tau}
+\end{figure}
+
+\noindent Usando esta heurística para seleccionar el parámetro $\tau$, podemos observar que aumentarlo solo lo empeora.
+Por tanto, no parece ser muy útil (buscar explicación). 
+
+\subsection{Batches balanceados}
+\label{subsec:balanceados}
+
+\subsection{Mezcla de imágenes}
+\label{subsec:mezcla}
+
+\subsection{Curva de 1 a 20 melanomas}
+\label{subsec:cur-mel}
+
+\subsection{Comprobación de representaciones vía t-SNE}
+\label{subsec:representaciones}
+
+\subsection{CLIP zero-shot}
+\label{subsec:zero-shot}
+
 \end{document}
