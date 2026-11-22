@@ -826,6 +826,8 @@ Para comprobarlo, deberíamos:
     \item Realizar el ajuste de logits para tal $\tau$. 
 \end{enumerate}
 
+\noindent Tal y como se muestra en la siguiente figura. 
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/u3_ajuste_logits_tau.png}
@@ -833,17 +835,103 @@ Para comprobarlo, deberíamos:
     \label{fig:tau}
 \end{figure}
 
-\noindent Usando esta heurística para seleccionar el parámetro $\tau$, podemos observar que aumentarlo solo lo empeora.
-Por tanto, no parece ser muy útil (buscar explicación). 
+\noindent Usando esta heurística para seleccionar el parámetro $\tau$, podemos observar que aumentarlo la 
+macro-F1 solo lo empeora. Por tanto, no parece ser muy útil y, de hecho, brinda exactamente los mismos resultados que 
+la línea base:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_ajuste_logits.png}
+    \caption{F1 por clase en el baseline comparada con la $CE_{\text{ponderada}}$ y el ajuste de logits en origen y destino. }
+    \label{fig:logits}
+\end{figure}
+
+\noindent Siendo todavía la cross-entropy ponderada el mejor de los resultados hasta ahora. 
 
 \subsection{Batches balanceados}
 \label{subsec:balanceados}
 
+\noindent La idea de esta técnica es la más simple de todas: formar batches cuasi-aleatorios donde la distribución de las clases 
+sea uniforme. De esta forma, en cada época, el modelo ve el mismo número de imágenes de cada clase. El efecto es intuitivamente 
+el mismo que el de usar una cross-entropy ponderada, puesto que al ver imágenes de clases infrarepresentadas más veces aporta 
+lo mismo a la función de pérdida que verlas solo una vez, pero con mayor peso. Lo que sí que cambia es el riesgo de memorización
+de las mismas: al verlas demasiadas veces, es probable que termine memorizándolas. Los resultados obtenidos son los siguientes:
+
+\begin{table}[H]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{@{}lrrrrrrr@{}}
+        \toprule
+        & \multicolumn{2}{c}{\textbf{Macro-F1}} & \multicolumn{2}{c}{\textbf{Bal. acc.}} & \multicolumn{2}{c}{\textbf{Accuracy}} & \textbf{mel$\to$nv} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(l){8-8}
+        \textbf{Técnica} & Derm. & Móvil & Derm. & Móvil & Derm. & Móvil & Derm. \\
+        \midrule
+        Baseline            & \textbf{0.624} & 0.165 & 0.654 & 0.267 & \textbf{0.775} & 0.168 & 0.242 \\
+        CE ponderada        & 0.531 & \textbf{0.226} & \textbf{0.711} & \textbf{0.288} & 0.656 & \textbf{0.200} & 0.067 \\
+        Batches balanceados & 0.497 & 0.172 & 0.674 & 0.246 & 0.636 & 0.168 & \textbf{0.054} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Baseline, cross-entropy ponderada y batches balanceados, en test. Derm.: dermatoscopio; mel$\to$nv: proporción de melanomas predichos como nevus.}
+    \label{tab:u3-batches}
+\end{table}
+
+\noindent Podemos observar algo interesante: es la primera técnica que supera a la cross-entropy ponderada en cuanto a la
+proporción de mel predicha como nv. En cuanto al resto de métricas, sigue rindiendo mucho mejor la cross-entropy balanceada. En 
+términos de macro-F1 por clase:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_batches_balanceados.png}
+    \caption{F1 por clase en el baseline comparada con la $CE_{\text{ponderada}}$ y los batches balanceados en origen y destino. }
+    \label{fig:balanceados}
+\end{figure}
+
 \subsection{Mezcla de imágenes}
 \label{subsec:mezcla}
 
+\noindent La técnica empleada para la mezcla es el mixup de imágenes. Un poco más arriba se datalla intuitivamente, pero resumidamente 
+es lo siguiente. Sean el conjunto de imágenes en train en origen 
+$$\mathcal{D_{\text{train}}^{\text{(origen)}}}=\{\textbf{x}_i\}_{i=1}^N, \text{ con } \textbf{x}_i \in \mathbb{R}^{H\times W}$$ 
+y el conjunto de etiquetas asociadas 
+$$\textbf{y} = \{y_i\}_{i=1}^N, \text{ con } y_i \in C = \{1, 2, \cdots, 7\}$$ 
+Tengamos además un parámetro $$\lambda \sim \beta(0.4, 0.4)$$
+Desde $i=1$ hasta $i=N$:
+\begin{enumerate}
+    \item Selección de la clase $c$ de $\textbf{x}_1$. Esta selección es clase-uniforme, es decir, todas las clases 
+    tienen la misma probabilidad de ser muestreadas. 
+    \item Muestreo de $\textbf{x}_1$ tal que $(\textbf{x}_1 \in \mathcal{D}) \land (y_1 = c).$
+    \item Muestreo de $\textbf{x}_2$ tal que $\textbf{x}_2 \in \mathcal{D}$. 
+\end{enumerate}
+
+\noindent Con $\textbf{x}_1$ y $\textbf{x}_2$, mezclarlas tal que $$\textbf{x}_i = \lambda \textbf{x}_1 + (1-\lambda)\textbf{x}_2$$
+
+Obteniendo imágenes del tipo
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_mezcla_ejemplos.png}
+    \caption{Muestra de 6 imágenes de $\mathcal{D}_{\text{mezcla}}$.}
+    \label{fig:mezcla-ejemplos}
+\end{figure}
+
+\noindent El resultado es $$\mathcal{D}_{\text{mezcla}} = \{\textbf{x}'_i\}_{i=1}^N$$ Mediante el cual se entrena un clasificador lineal 
+para obtener:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_mezcla.png}
+    \caption{Muestra de 6 imágenes de $\mathcal{D}_{\text{mezcla}}$.}
+    \label{fig:mezcla}
+\end{figure}
+
+\noindent Pensabamos firmemente que esta técnica iba a ayudar a resolver el problema del desbalance, pero parece que su efecto es el contrario, 
+ofreciendo rendimiento peor que el del baseline. 
+
 \subsection{Curva de 1 a 20 melanomas}
 \label{subsec:cur-mel}
+
+\noindent La idea de esta curva es 
 
 \subsection{Comprobación de representaciones vía t-SNE}
 \label{subsec:representaciones}
