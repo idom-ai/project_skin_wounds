@@ -928,15 +928,97 @@ para obtener:
 \noindent Pensabamos firmemente que esta técnica iba a ayudar a resolver el problema del desbalance, pero parece que su efecto es el contrario, 
 ofreciendo rendimiento peor que el del baseline. 
 
-\subsection{Curva de 1 a 20 melanomas}
-\label{subsec:cur-mel}
-
-\noindent La idea de esta curva es 
-
 \subsection{Comprobación de representaciones vía t-SNE}
 \label{subsec:representaciones}
 
+\noindent La representación t-SNE es un método estadístico capaz de representar datos  $\mathcal{D} \in \mathbb{R}^D, D \geq 4$, generalmente de 
+dimensión alta ($D>>d$), en $\mathbb{R}^2$ $$\text{t-SNE}: \mathbb{R}^D \to \mathbb{R}^2$$ guardando relaciones de cercanía entre vecinos. Esto es, si dos
+imágenes, ya pasadas por una red, tienen descriptores con cierta cercanía en el espacio de features, la proyección t-SNE es tal que también la tengan 
+en $\mathbb{R}^2$. Con una tal representación, podemos comprobar en qué medida la extracción de características es tal que convierte el problema 
+en uno linealmente separable, posteriormente atacado por un clasificador lineal, en nuestro caso, un perceptrón. Obteniendo una representación por red, 
+obtenemos:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/u3_tsne_clip_vitb32.png}
+        \caption{CLIP ViT-B/32 (modelo de referencia)}
+        \label{fig:tsne-clip}
+    \end{subfigure}
+    \\[1em]
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/u3_tsne_resnet50.png}
+        \caption{ResNet-50}
+        \label{fig:tsne-resnet}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/u3_tsne_dinov2_vits14.png}
+        \caption{DINOv2 ViT-S/14}
+        \label{fig:tsne-dinov2}
+    \end{subfigure}
+    \caption{t-SNE de las features de cada extractor sobre los tests de los dos dominios. Color: clase; forma: dominio ($\bullet$ dermatoscopio, $\blacktriangle$ móvil).}
+    \label{fig:tsne}
+\end{figure}
+
+\noindent Algunos comentarios acerca de las representaciones:
+
+\begin{enumerate}
+    \item Separación por dominio: si el problema de clasificación fuera separar ambos dominios, tanto CLIP como DinoV2 tendrían un accuracy perfecto. 
+    Esto se debe, claramente, a que en el espacio representado, ambos dominios forman 2 clústeres muy evidentes y con una lejanía notable. 
+    No es el caso de las ResNet, cuya separación por dominios todavía no es buena. 
+    \item Separación por clase: las clases están profundamente mezcladas, en todas las representaciones, incluída la de CLIP, nuestro modelo de referencia. 
+    Esto explica por qué el hecho de hacer arreglos en la función de pérdida consigue cierta mejoría, pero definitivamente queda lejos de solucionar el 
+    problema. Ya no es que el problema sea linealmente no-separable, sino que los puntos no se agrupan por clase, parecen estar aleatoriamente distribuidos. 
+    Esto es algo muy complejo de tratar, pero es probable que con fine-tuning estas representaciones puedan mejorar en alguna medida. Por ahora se ha seguido
+    la metodología off-the-shelf. 
+\end{enumerate}
+
 \subsection{CLIP zero-shot}
 \label{subsec:zero-shot}
+
+\noindent El modelo CLIP está entrenado con imágenes y textos, y diseñado de tal forma que los lleva al mismo espacio vectorial. De esta forma, el producto escalar 
+entre una imagen y un texto representa, de alguna forma, el grado de similitud entre una y otra. Por lo tanto, acompañar a las imágenes con texto puede resultar 
+beneficioso a la hora de llevar los vectores de features a un espacio donde el problema se separe mejor y por tanto los separadores lineales funcionen mejor. En 
+nuestro caso, hemos escogido diversas frases, acompañadas siempre de las clases de las imágenes en entrenamiento: 
+
+\begin{enumerate}
+    \item "a dermoscopy image of <<clase>>"
+    \item "a dermatoscopic photo of <<clase>>"
+    \item "a close-up photo of <<clase>> on the skin"
+    \item "a clinical photo of a skin lesion: <<clase>>"
+    \item "a photo of <<clase>>, a type of skin lesion"
+\end{enumerate}
+
+\noindent Algunos comentarios acerca del resultado esperado:
+
+\begin{enumerate}
+    \item CLIP no necesariamente ha sido entrenado con imágenes tomadas de dermatoscopio. De hecho, lo más probable es que haya visto pocas imágenes de este tipo. 
+    Por lo tanto, cabe esperar que no mejore demasiado en el dominio de origen, el de dermatoscopio. Es bastante más probable que mejore en el dominio de destino, 
+    pues son imágenes tomadas con el móvil. 
+    \item Habrá clases de lesiones de piel más comúnes en el internet que en el dataset. El desbalance en este caso será mucho más notable, pues así esperamos que 
+    lo sea en el conjunto con el que se entrenó CLIP. 
+\end{enumerate}
+
+\noindent Los resultados fueron los siguientes:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/u3_clip_zero_shot.png}
+    \caption{F1 por clase en el baseline comparada con la de la técnica CLIP zero-shot empleada. }
+    \label{fig:clip-zero}
+\end{figure}
+
+\noindent Los resultados obtenidos son prácticamente los que esperábamos. El rendimiento cae notablemente en origen, pero 
+las clases de lesiones mejor predichas son cánceres, tipos de lesión de piel que abundan en internet, tienen mucha mayor 
+frecuencia que en nuestros conjuntos de datos. 
+
+\subsection{Curva de 1 a 20 melanomas}
+\label{subsec:cur-mel}
+
+\noindent La idea de esta curva es estudiar el renidmiento del modelo 
 
 \end{document}
